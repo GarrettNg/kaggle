@@ -3,7 +3,9 @@ https://www.kaggle.com/competitions/titanic/
 """
 from pathlib import Path
 
+import matplotlib
 import pandas as pd
+import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier
 
 
@@ -12,31 +14,73 @@ TEST_DATA_PATH = "./data/test.csv"
 TRAINING_DATA_PATH = "./data/train.csv"
 
 
-def check_input(input_files: list) -> None:
-    """Print head of input csv files
-    :param input_files: list of input files
+def explore_input_data(train_data: pd.DataFrame, test_data: pd.DataFrame) -> None:
+    """Show various information about the data sets
+    :param train_data: DataFrame containing training data set
+    :param test_data: DataFrame containing test data set
     """
-    dfs = [pd.read_csv(f) for f in input_files]
-    [print(df.head()) for df in dfs]
+    print(train_data.head())
+    print(test_data.head())
+
+    print("\nMissing values:")
+    print(train_data.isnull().sum())
+    # sns.heatmap(train_data.isnull(), cbar=False).set_title("Missing values heatmap")
+    # matplotlib.pyplot.show()
+
+    print("\nUnique values:")
+    print(train_data.nunique())
 
 
-def get_feature_rate(
-    dataset: pd.DataFrame, feature_header: str, feature_value: str, feature_outcome: str
-) -> float:
+    # Survived
+    num_survived = len(train_data.loc[train_data["Survived"] == 1])
+    num_not_survived = len(train_data.loc[train_data["Survived"] == 0])
+    survival_rate = num_survived / (num_survived + num_not_survived)
+    print("All\t\tsurvival rate:\t", survival_rate)
+
+    # Pclass
+    [show_survival_rate(train_data, "Pclass", i) for i in [1, 2, 3]]
+
+    # Sex
+    [show_survival_rate(train_data, "Sex", sex) for sex in ["female", "male"]]
+
+    # Age
+    # sns.histplot(train_data, x="Age", hue="Survived", binwidth=1)
+    # matplotlib.pyplot.show()
+
+    # SibSp
+    # sns.histplot(train_data, x="SibSp", hue="Survived", binwidth=1)
+    # matplotlib.pyplot.show()
+
+    # Parch
+    # sns.histplot(train_data, x="Parch", hue="Survived", binwidth=1)
+    # matplotlib.pyplot.show()
+
+    # Ticket
+    # print(train_data["Ticket"])
+
+    # Fare
+    # sns.histplot(train_data, x="Fare", hue="Survived", binwidth=20)
+    # matplotlib.pyplot.show()
+
+    # Embarked
+    # sns.histplot(train_data, x="Embarked", hue="Survived")
+    # matplotlib.pyplot.show()
+
+
+def show_survival_rate(
+    dataset: pd.DataFrame, feature_header: str, feature_value: str 
+):
     """Get survival rate for a given feature
     :param dataset: DataFrame containing input data
     :param feature_header: feature header from data set
     :param feature_value: feature value from data set
-    :param feature_outcome: feature outcome from data set
-    :return: feature rate
     """
-    feature = dataset.loc[dataset[feature_header] == feature_value][feature_outcome]
+    feature = dataset.loc[dataset[feature_header] == feature_value]["Survived"]
     rate = sum(feature) / len(feature)
     print(
-        f"% of '{feature_value}' ('{feature_header}') with outcome of '{feature_outcome}':",
+            f"{feature_header} {feature_value}\tsurvival rate:\t",
         rate,
     )
-    return rate
 
 
 def train_predict(
@@ -44,7 +88,7 @@ def train_predict(
     test_data: pd.DataFrame,
     output_dir_path: str = OUTPUT_DIR_PATH,
 ) -> None:
-    """Train and predict survival rate
+    """Train and predict survival
     :param train_data: DataFrame containing training data set
     :param test_data: DataFrame containing test data set
     :param output_dir_path: path to write csv file with predictions
@@ -66,13 +110,9 @@ def train_predict(
 
 
 if __name__ == "__main__":
-    # check_input([TEST_DATA_PATH, TRAINING_DATA_PATH])
-
     train_data = pd.read_csv(TRAINING_DATA_PATH)
     test_data = pd.read_csv(TEST_DATA_PATH)
 
-    # Survival rate by sex
-    # female_survival_rate = get_feature_rate(train_data, "Sex", "female", "Survived")
-    # male_survival_rate = get_feature_rate(train_data, "Sex", "male", "Survived")
+    explore_input_data(train_data, test_data)
 
-    train_predict(train_data, test_data)
+    # train_predict(train_data, test_data)
